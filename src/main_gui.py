@@ -1,10 +1,8 @@
 import tkinter
 import threading
-
-import sys
-sys.path.append('..')
-import 
-
+import recognition_client as rec
+import os
+import player_engine
 
 from tkinter import ttk, filedialog
 
@@ -20,11 +18,13 @@ class MidiPlayerRoot:
 
         # 文件路径
         self.img_path = None
+        self.mid_path = None
 
         # 内容属性
         self.title_label = None  # 标题
         self.load_button = None  # 加载按钮
         self.state_text = None  # 加载状态
+        self.play_text = None  # 现在可否播放
         self.play_button = None  # 播放按钮
         self.recognize_button = None  # 识别按钮
 
@@ -44,7 +44,7 @@ class MidiPlayerRoot:
         self.load_button = ttk.Button(button_frame, text="导入图片", command=self.load_file)
         self.load_button.grid(row=0, column=0, padx=10)
 
-        self.recognize_button = ttk.Button(button_frame, text="开始识别", command=self.start_recognition)
+        self.recognize_button = ttk.Button(button_frame, text="开始识别", command=self.recognition_entrance)
         self.recognize_button.grid(row=0, column=1, padx=10)
 
         # 状态标签
@@ -52,8 +52,11 @@ class MidiPlayerRoot:
         self.state_text.pack(pady=5)
 
         # 可视化按钮
-        self.play_button = ttk.Button(self.root, text="进入可视化界面", command=self.start_playing)
+        self.play_button = ttk.Button(self.root, text="进入可视化界面", command=self.play_entrance)
         self.play_button.pack(pady=15)
+
+        self.play_text = ttk.Label(self.root, text="未生成mid图片，请等待识别", foreground="gray")
+        self.play_text.pack(pady=5)
 
     def load_file(self):
         path = filedialog.askopenfilename(filetypes=[("PNG 文件", "*.png")])
@@ -62,20 +65,45 @@ class MidiPlayerRoot:
             filename = path.split("/")[-1]
             self.state_text.config(text=f"已加载图片: {filename}", foreground="green")
 
-    def start_recognition(self):
+    def recognition_entrance(self):
         if self.img_path:
-            print(f"开始识别: {self.img_path}")
             self.state_text.config(text="识别中...", foreground="blue")
-            # TODO: 调用识别逻辑
+            rec_thread = threading.Thread(target=self.start_rec())
+            rec_thread.daemon = True
+            rec_thread.start()
         else:
             self.state_text.config(text="请先导入图片", foreground="red")
 
-    def start_playing(self):
-        print("进入可视化界面")
-        # TODO: 调用可视化界面逻辑
+    def start_rec(self):
+        try:
+            rec.run_recognition(self.img_path)
+            self.state_text.after(0, lambda: self.state_text.config(
+                text="识别完成 ✔", foreground="green"))
+        except Exception as e:
+            self.state_text.after(0, lambda: self.state_text.config(
+                text=f"识别出错: {str(e)}", foreground="red"))
+
+    def play_entrance(self):
+        self.mid_path = os.path.join(os.path.dirname(r"F:\Graduation Design\StaveRecognition\midi_file"), "temp.mid")
+        if not os.path.exists(self.mid_path):
+            return
+        play_thread = threading.Thread(target=self.start_play)
+        play_thread.daemon = True
+        play_thread.start()
+
+    def start_play(self):
+        try:
+            player_engine.start_visual(self.mid_path)
+        except Exception as e:
+            print(e)
 
 
 def run_gui():
     root = tkinter.Tk()
     MidiPlayerRoot(root)
     root.mainloop()
+
+
+
+
+

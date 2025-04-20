@@ -11,9 +11,8 @@ def image_to_base64(image_path):
         return base64.b64encode(image_file.read()).decode('utf-8')
 
 
-def test_api():
-    image_path = r'F:/OCR/GOT-OCR2.0/GOT-OCR-2.0-master/test/test2.png'
-    res_path = r'F:/OCR/GOT-OCR2.0/GOT-OCR-2.0-master/results/'
+def run_recognition(image_path):
+    res_path = r'F:/Graduation Design/StaveRecognition/midi_file/'
     base64_image = image_to_base64(image_path)
     data = {
         "image": f"{base64_image}",
@@ -32,10 +31,6 @@ def test_api():
     kern_score = response.json()
     score = converter.parse(kern_score)
 
-    midi_path = res_path + 'output.mid'
+    midi_path = res_path + 'temp.mid'
     score.write('midi', fp=midi_path)
     print("已生成midi文件")
-
-
-if __name__ == '__main__':
-    test_api()
