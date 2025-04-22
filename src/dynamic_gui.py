@@ -3,7 +3,6 @@ import numpy as np
 import cv2
 from threading import Thread
 from configs import *
-import static_gui
 
 
 class DynamicGUI(Thread):
@@ -28,14 +27,25 @@ class DynamicGUI(Thread):
         重画此时的所有音符
         """
         self.image = self.st_gui.image_base.copy()
+        # 画键盘上的音符
         for note in self.playing_notes:
             if note.is_playing:
-                self.draw_kb_note(note)  # 画键盘上的音符
+                self.draw_kb_note(note)
+
         # 画正在下落的
         self.draw_fall_note(t_cur)
+
         # 画进度条
+        self.draw_bar()
 
         # 显示时间
+        timer = "{}:{:02d}/{}:{:02d}".format(
+            int(self.time_code / 60),
+            int(self.time_code % 60),
+            int(self.length / 60),
+            int(self.length % 60),
+        )
+        self.draw_time(timer, self.st_gui.piano_x - 130, 25, 1)
 
         # 刷新页面
         self.image = cv2.resize(
@@ -52,9 +62,9 @@ class DynamicGUI(Thread):
         pts = np.array(self.st_gui.pos_list[note.note_id], np.int32)
         pts = pts.reshape(-1, 1, 2)
         if note.is_white:
-            color = YELLOW
+            color = BLUE
         else:
-            color = BRIGHT_YELLOW
+            color = SKY_BLUE
         cv2.fillPoly(self.image, [pts], color)
         cv2.polylines(self.image, [pts], True, BLACK)
 
@@ -71,10 +81,10 @@ class DynamicGUI(Thread):
                 kb_pos = self.st_gui.pos_list[kb_note][0][0]
                 if self.playing_notes[note["msg"].note - 21].is_white:
                     width = 16
-                    cur_color = YELLOW
+                    cur_color = BLUE
                 else:
                     width = 10
-                    cur_color = BRIGHT_YELLOW
+                    cur_color = SKY_BLUE
                 height = note["note_length"] / self.st_gui.future_time * self.st_gui.play_line
                 t = note["start_time"] - self.time_code
                 y_pos = t / self.st_gui.future_time * self.st_gui.play_line
@@ -89,13 +99,21 @@ class DynamicGUI(Thread):
             kb_pos = self.st_gui.pos_list[kb_note][0][0]
             if note.is_white:
                 width = 16
-                cur_color = YELLOW
+                cur_color = BLUE
             else:
                 width = 10
-                cur_color = BRIGHT_YELLOW
+                cur_color = SKY_BLUE
             height = duration / self.st_gui.future_time * (self.st_gui.play_line - 1)
             y_pos = self.st_gui.play_line - 1
             self.draw_rect(kb_pos, y_pos - height, kb_pos + width, y_pos, cur_color)
+
+    def draw_bar(self):
+        """
+        画进度条
+        """
+        width = self.time_code / self.length * self.st_gui.piano_x
+        self.draw_rect(0, self.st_gui.play_line + self.st_gui.piano_y + 1, width,
+                       self.st_gui.play_line + self.st_gui.piano_y + 16, SPRING_GREEN)
 
     def draw_rect(self, x1, y1, x2, y2, color):
         pt1 = (x1, y1)
@@ -105,7 +123,13 @@ class DynamicGUI(Thread):
         pts = np.array([pt1, pt2, pt3, pt4], np.int32)
         pts = pts.reshape((-1, 1, 2))
         cv2.fillPoly(self.image, [pts], color)
-        cv2.polylines(self.image, [pts], True, BLACK)
+        # cv2.polylines(self.image, [pts], True, BLACK)
+
+    def draw_time(self, timer, x, y, alpha):
+        font = cv2.FONT_ITALIC
+        overlay = self.image.copy()
+        cv2.putText(overlay, timer, (x, y), font, 0.75, (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.addWeighted(overlay, alpha, self.image, 1 - alpha, 0, self.image)
 
     def terminate(self):
         self.running = False

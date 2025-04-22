@@ -1,6 +1,3 @@
-import threading
-import time
-
 # 从A开始，True是白False是黑
 BLACK_OR_WHITE = [True, False, True, True, False, True, False, True, True, False, True, False]
 

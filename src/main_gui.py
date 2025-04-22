@@ -68,7 +68,7 @@ class MidiPlayerRoot:
     def recognition_entrance(self):
         if self.img_path:
             self.state_text.config(text="识别中...", foreground="blue")
-            rec_thread = threading.Thread(target=self.start_rec())
+            rec_thread = threading.Thread(target=self.start_rec)
             rec_thread.daemon = True
             rec_thread.start()
         else:
@@ -84,7 +84,8 @@ class MidiPlayerRoot:
                 text=f"识别出错: {str(e)}", foreground="red"))
 
     def play_entrance(self):
-        self.mid_path = os.path.join(os.path.dirname(r"F:\Graduation Design\StaveRecognition\midi_file"), "temp.mid")
+        # self.mid_path = os.path.join(os.path.dirname(r"F:\Graduation Design\StaveRecognition\midi_file"), "temp.mid")
+        self.mid_path = "midi_file/temp.mid"
         if not os.path.exists(self.mid_path):
             return
         play_thread = threading.Thread(target=self.start_play)

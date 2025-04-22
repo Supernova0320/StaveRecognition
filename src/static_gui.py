@@ -1,7 +1,5 @@
 import cv2
 import sdl2.ext
-import os
-import mido
 import numpy as np
 
 from configs import *
