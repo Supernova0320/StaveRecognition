@@ -35,6 +35,10 @@ def set_new_index(gui, partition, i, x, y, length, change, notes, port, paused):
 def get_events(gui, p_mid, i, length, change, notes, port, paused):
     events = sdl2.ext.get_events()
     for e in events:
+        # 退出
+        if e.type == sdl2.SDL_QUIT:
+            sdl2.ext.quit()
+            break
         # 暂停
         if e.type == sdl2.SDL_KEYDOWN:
             if e.key.keysym.sym == ord(" "):

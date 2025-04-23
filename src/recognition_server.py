@@ -1,6 +1,3 @@
-import base64
-import os
-import time
 import uvicorn
 
 from pydantic import BaseModel
@@ -20,7 +17,7 @@ app = FastAPI()
 
 
 class OcrRequest(BaseModel):
-    image: str
+    image_path: str
     ocr_type: str = 'ocr'
     ocr_box: str = None
     ocr_color: str = None
@@ -30,22 +27,15 @@ class OcrRequest(BaseModel):
 
 @app.post('/ocr')
 async def ocr(request: OcrRequest):
-    # 传参
-    image_data = base64.b64decode(request.image)
+    image_path = request.image_path  # 获取路径
     ocr_type = request.ocr_type
     ocr_box = request.ocr_box
     ocr_color = request.ocr_color
     render = request.render
     save_render_file = request.save_render_file
 
-    # 生成唯一临时文件
-    image_name = f"{time.time()}.jpg"
-    with open(image_name, 'wb') as f:
-        f.write(image_data)
-
-    res = model.chat(tokenizer, image_name, ocr_type=ocr_type, ocr_box=ocr_box, ocr_color=ocr_color, render=render,
-                     save_render_file=save_render_file)
-    os.remove(image_name)
+    res = model.chat(tokenizer, image_path, ocr_type=ocr_type, ocr_box=ocr_box,
+                     ocr_color=ocr_color, render=render, save_render_file=save_render_file)
     return res
 
 

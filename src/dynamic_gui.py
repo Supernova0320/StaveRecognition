@@ -15,6 +15,8 @@ class DynamicGUI(Thread):
         self.time_code = 0
         self.length = length
         self.future_part = None  # 未来一段时间的音符列表
+        self.white_color = SKY_BLUE
+        self.black_color = BLUE
 
     def run(self):
         # 反复重画GUI
@@ -62,9 +64,9 @@ class DynamicGUI(Thread):
         pts = np.array(self.st_gui.pos_list[note.note_id], np.int32)
         pts = pts.reshape(-1, 1, 2)
         if note.is_white:
-            color = BLUE
+            color = self.white_color
         else:
-            color = SKY_BLUE
+            color = self.black_color
         cv2.fillPoly(self.image, [pts], color)
         cv2.polylines(self.image, [pts], True, BLACK)
 
@@ -81,10 +83,10 @@ class DynamicGUI(Thread):
                 kb_pos = self.st_gui.pos_list[kb_note][0][0]
                 if self.playing_notes[note["msg"].note - 21].is_white:
                     width = 16
-                    cur_color = BLUE
+                    cur_color = self.white_color
                 else:
                     width = 10
-                    cur_color = SKY_BLUE
+                    cur_color = self.black_color
                 height = note["note_length"] / self.st_gui.future_time * self.st_gui.play_line
                 t = note["start_time"] - self.time_code
                 y_pos = t / self.st_gui.future_time * self.st_gui.play_line
@@ -99,10 +101,10 @@ class DynamicGUI(Thread):
             kb_pos = self.st_gui.pos_list[kb_note][0][0]
             if note.is_white:
                 width = 16
-                cur_color = BLUE
+                cur_color = self.white_color
             else:
                 width = 10
-                cur_color = SKY_BLUE
+                cur_color = self.black_color
             height = duration / self.st_gui.future_time * (self.st_gui.play_line - 1)
             y_pos = self.st_gui.play_line - 1
             self.draw_rect(kb_pos, y_pos - height, kb_pos + width, y_pos, cur_color)
@@ -123,7 +125,6 @@ class DynamicGUI(Thread):
         pts = np.array([pt1, pt2, pt3, pt4], np.int32)
         pts = pts.reshape((-1, 1, 2))
         cv2.fillPoly(self.image, [pts], color)
-        # cv2.polylines(self.image, [pts], True, BLACK)
 
     def draw_time(self, timer, x, y, alpha):
         font = cv2.FONT_ITALIC

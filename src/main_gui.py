@@ -55,7 +55,7 @@ class MidiPlayerRoot:
         self.play_button = ttk.Button(self.root, text="进入可视化界面", command=self.play_entrance)
         self.play_button.pack(pady=15)
 
-        self.play_text = ttk.Label(self.root, text="未生成mid图片，请等待识别", foreground="gray")
+        self.play_text = ttk.Label(self.root, text="未生成mid文件，请等待识别", foreground="gray")
         self.play_text.pack(pady=5)
 
     def load_file(self):
@@ -77,11 +77,9 @@ class MidiPlayerRoot:
     def start_rec(self):
         try:
             rec.run_recognition(self.img_path)
-            self.state_text.after(0, lambda: self.state_text.config(
-                text="识别完成 ✔", foreground="green"))
+            self.state_text.config(text="识别完成 ✔", foreground="green")
         except Exception as e:
-            self.state_text.after(0, lambda: self.state_text.config(
-                text=f"识别出错: {str(e)}", foreground="red"))
+            self.state_text.config(text=f"识别出错: {str(e)}", foreground="red")
 
     def play_entrance(self):
         # self.mid_path = os.path.join(os.path.dirname(r"F:\Graduation Design\StaveRecognition\midi_file"), "temp.mid")
