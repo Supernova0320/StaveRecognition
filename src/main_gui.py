@@ -1,94 +1,141 @@
-import tkinter
+import sys
 import threading
-import recognition_client as rec
 import os
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QLabel, QPushButton,
+    QVBoxLayout, QHBoxLayout, QFileDialog
+)
+from PyQt5.QtGui import QFont, QColor, QPalette
+from PyQt5.QtCore import Qt
+
+import recognition_client as rec
 import player_engine
 
-from tkinter import ttk, filedialog
 
+class MidiPlayerGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("五线谱识别播放系统")
+        self.setFixedSize(600, 420)
+        self.set_ui_palette()
 
-class MidiPlayerRoot:
-    def __init__(self, root):
-        # 界面属性
-        self.root = root
-        self.root.title("🎵 五线谱识别播放系统")
-        self.root.geometry("400x250")
-        self.root.resizable(False, False)
-        self.root.configure(bg="#f0f0f0")
-
-        # 文件路径
         self.img_path = None
         self.mid_path = None
 
-        # 内容属性
-        self.title_label = None  # 标题
-        self.load_button = None  # 加载按钮
-        self.state_text = None  # 加载状态
-        self.play_text = None  # 现在可否播放
-        self.play_button = None  # 播放按钮
-        self.recognize_button = None  # 识别按钮
+        self.init_ui()
 
-        self.create_buttons()
+    def set_ui_palette(self):
+        palette = QPalette()
+        palette.setColor(QPalette.Window, QColor("#f8f9fa"))
+        self.setPalette(palette)
+        self.setStyleSheet("background-color: #f8f9fa;")
 
-    def create_buttons(self):
-        style = ttk.Style()
-        style.configure("TButton", font=("黑体", 12), padding=10)
-        style.configure("TLabel", font=("黑体", 11))
+    def init_ui(self):
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(40, 40, 40, 40)
+        main_layout.setSpacing(24)
 
-        self.title_label = ttk.Label(self.root, text="五线谱图片识别", font=("黑体", 16, "bold"))
-        self.title_label.pack(pady=(20, 10))
+        # 标题
+        self.title_label = QLabel("五线谱识别播放")
+        self.title_label.setFont(QFont("Segoe UI", 22, QFont.Bold))
+        self.title_label.setAlignment(Qt.AlignCenter)
+        self.title_label.setStyleSheet("color: #333333;")
+        main_layout.addWidget(self.title_label)
 
-        button_frame = ttk.Frame(self.root)
-        button_frame.pack(pady=5)
+        # 按钮区域
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(20)
 
-        self.load_button = ttk.Button(button_frame, text="导入图片", command=self.load_file)
-        self.load_button.grid(row=0, column=0, padx=10)
+        self.load_button = QPushButton("导入图片")
+        self.load_button.setFont(QFont("Segoe UI", 12))
+        self.load_button.setStyleSheet(self.button_style("#4a90e2"))
+        self.load_button.clicked.connect(self.load_file)
 
-        self.recognize_button = ttk.Button(button_frame, text="开始识别", command=self.recognition_entrance)
-        self.recognize_button.grid(row=0, column=1, padx=10)
+        self.recognize_button = QPushButton("开始识别")
+        self.recognize_button.setFont(QFont("Segoe UI", 12))
+        self.recognize_button.setStyleSheet(self.button_style("#0078d7"))
+        self.recognize_button.clicked.connect(self.recognition_entrance)
+
+        button_layout.addWidget(self.load_button)
+        button_layout.addWidget(self.recognize_button)
+
+        main_layout.addLayout(button_layout)
 
         # 状态标签
-        self.state_text = ttk.Label(self.root, text="未导入图片", foreground="gray")
-        self.state_text.pack(pady=5)
+        self.state_text = QLabel("请导入五线谱图片")
+        self.state_text.setFont(QFont("Segoe UI", 11))
+        self.state_text.setStyleSheet("color: #666666;")
+        self.state_text.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.state_text)
 
-        # 可视化按钮
-        self.play_button = ttk.Button(self.root, text="进入可视化界面", command=self.play_entrance)
-        self.play_button.pack(pady=15)
+        # 可视化播放按钮
+        self.play_button = QPushButton("播放并可视化")
+        self.play_button.setFont(QFont("Segoe UI", 12))
+        self.play_button.setStyleSheet(self.button_style("#28a745"))
+        self.play_button.clicked.connect(self.play_entrance)
+        main_layout.addWidget(self.play_button)
 
-        self.play_text = ttk.Label(self.root, text="未生成mid文件，请等待识别", foreground="gray")
-        self.play_text.pack(pady=5)
+        # 播放状态标签
+        self.play_text = QLabel("请先识别以生成 MIDI 文件")
+        self.play_text.setFont(QFont("Segoe UI", 11))
+        self.play_text.setStyleSheet("color: #666666;")
+        self.play_text.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(self.play_text)
+
+        self.setLayout(main_layout)
+
+    def button_style(self, bg_color="#4a90e2"):
+        return f"""
+            QPushButton {{
+                background-color: {bg_color};
+                color: white;
+                padding: 10px 24px;
+                border: none;
+                border-radius: 6px;
+                font-weight: 500;
+            }}
+            QPushButton:hover {{
+                background-color: #357ABD;
+            }}
+        """
 
     def load_file(self):
-        path = filedialog.askopenfilename(filetypes=[("PNG 文件", "*.png")])
+        path, _ = QFileDialog.getOpenFileName(self, "选择图片", "", "PNG 文件 (*.png)")
         if path:
             self.img_path = path
-            filename = path.split("/")[-1]
-            self.state_text.config(text=f"已加载图片: {filename}", foreground="green")
+            filename = os.path.basename(path)
+            self.state_text.setText(f"已加载: {filename}")
+            self.state_text.setStyleSheet("color: #2e8b57;")
 
     def recognition_entrance(self):
         if self.img_path:
-            self.state_text.config(text="识别中...", foreground="blue")
-            rec_thread = threading.Thread(target=self.start_rec)
-            rec_thread.daemon = True
-            rec_thread.start()
+            self.state_text.setText("识别中，请稍候...")
+            self.state_text.setStyleSheet("color: #0078d7;")
+            thread = threading.Thread(target=self.start_rec)
+            thread.daemon = True
+            thread.start()
         else:
-            self.state_text.config(text="请先导入图片", foreground="red")
+            self.state_text.setText("请先导入图片")
+            self.state_text.setStyleSheet("color: #d9534f;")
 
     def start_rec(self):
         try:
             rec.run_recognition(self.img_path)
-            self.state_text.config(text="识别完成 ✔", foreground="green")
+            self.state_text.setText("识别完成")
+            self.state_text.setStyleSheet("color: #28a745;")
         except Exception as e:
-            self.state_text.config(text=f"识别出错: {str(e)}", foreground="red")
+            self.state_text.setText(f"识别失败: {str(e)}")
+            self.state_text.setStyleSheet("color: #d9534f;")
 
     def play_entrance(self):
-        # self.mid_path = os.path.join(os.path.dirname(r"F:\Graduation Design\StaveRecognition\midi_file"), "temp.mid")
         self.mid_path = "midi_file/temp.mid"
         if not os.path.exists(self.mid_path):
+            self.play_text.setText("MIDI 文件未找到，请先识别")
+            self.play_text.setStyleSheet("color: #d9534f;")
             return
-        play_thread = threading.Thread(target=self.start_play)
-        play_thread.daemon = True
-        play_thread.start()
+        thread = threading.Thread(target=self.start_play)
+        thread.daemon = True
+        thread.start()
 
     def start_play(self):
         try:
@@ -98,11 +145,7 @@ class MidiPlayerRoot:
 
 
 def run_gui():
-    root = tkinter.Tk()
-    MidiPlayerRoot(root)
-    root.mainloop()
-
-
-
-
-
+    app = QApplication(sys.argv)
+    window = MidiPlayerGUI()
+    window.show()
+    sys.exit(app.exec_())
