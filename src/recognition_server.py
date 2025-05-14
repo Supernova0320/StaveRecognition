@@ -8,11 +8,11 @@ import uuid
 
 # 模型加载
 tokenizer = AutoTokenizer.from_pretrained(
-    pretrained_model_name_or_path=r'/home/bygpu/Desktop/ocr_server/GOT-OCR2.0/GOT-OCR-2.0-master/ckpts/GOT-OCR2_0/',
+    pretrained_model_name_or_path=r'/home/bygpu/Desktop/ocr_server/out_retrain/',
     trust_remote_code=True
 )
 model = AutoModel.from_pretrained(
-    pretrained_model_name_or_path=r'/home/bygpu/Desktop/ocr_server/GOT-OCR2.0/GOT-OCR-2.0-master/ckpts/GOT-OCR2_0/',
+    pretrained_model_name_or_path=r'/home/bygpu/Desktop/ocr_server/out_retrain/',
     trust_remote_code=True,
     low_cpu_mem_usage=True,
     device_map='cuda',

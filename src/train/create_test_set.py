@@ -45,7 +45,7 @@ def split_dataset(dataset_dir, test_size=0.2):
 
 
 # 设置数据集目录路径
-dataset_dir = r'F:\Graduation Design\Dataset\grandstaff'
+dataset_dir = r'F:\Graduation Design\Dataset\test\normal'
 
 # 调用函数，随机提取20%的测试集
 split_dataset(dataset_dir, test_size=0.2)

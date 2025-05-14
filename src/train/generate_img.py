@@ -53,8 +53,8 @@ def batch_process_krn_to_svg(input_dir, output_dir):
 
 
 # 设置路径
-input_dir = r'F:\Graduation Design\Dataset\new\labels'
-output_dir = r'F:\Graduation Design\Dataset\new\images'
+input_dir = r'F:\Graduation Design\StaveRecognition\midi_file'
+output_dir = r'F:\Graduation Design\StaveRecognition\midi_file'
 
 # 执行批量转换
 batch_process_krn_to_svg(input_dir, output_dir)
